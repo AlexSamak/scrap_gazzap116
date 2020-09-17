@@ -1,24 +1,25 @@
 import requests
 from bs4 import BeautifulSoup
+import urllib.parse
 
 
 class Product:
     name = str
     price = str
     in_stock = str
-    count = str
+    link = str
 
-    def __init__(self, name, price, in_stock, count):
+    def __init__(self, name, price, in_stock, link):
         self.name = name
         self.price = price
         self.in_stock = in_stock
-        self.count = count
+        self.link = link
 
     def __repr__(self):
         return str(self.__dict__)
 
 
-def main():
+def get_soup(url):
     headers = {
         'authority': 'gazzap116.ru',
         'cache-control': 'max-age=0',
@@ -31,39 +32,57 @@ def main():
         'sec-fetch-user': '?1',
         'accept-language': 'en-US,en;q=0.9',
     }
-
     session = requests.session()
-
-    response = session.get(
-        "https://gazzap116.ru/search?query=%D0%B3%D0%BB%D1%83%D1%88%D0%B8%D1%82%D0%B5%D0%BB%D1%8C&page=2",
-        headers=headers)
+    response = session.get(url, headers=headers)
 
     if response.status_code == 200:
         print("Success")
     else:
         print("Bad result")
+    return BeautifulSoup(response.text, 'html.parser')
 
-    soup = BeautifulSoup(response.text, 'html.parser')
 
-    element = soup.find('div', class_="mse2_pagination cataloge__pagination")
-    print(len(element.find_all('a')))
+def get_page_count(item_soup):
+    el_pagination = item_soup.find('div', class_="mse2_pagination cataloge__pagination")
+    return len(el_pagination.find_all('a'))
 
-    for element in soup.find_all('div',
-                                 class_="ms2_product cataloge__item_add"):
-        name = element.find('h3',
-                            class_="cataloge__title cataloge__title_add").text.strip()
-        price = element.find('span', class_="c__price").text.strip()
-        in_stock = element.find('p', class_="in_store__line").text.strip()
-        #count = "https://gazzap116.ru/" + element.find('a').get('href')
-        count = ""
 
-        product = Product(name, price, in_stock, count)
+def main():
+    find_detail = input('Название детали: ')
+    if find_detail == '':
+        find_detail = 'рама'
+    start = "https://gazzap116.ru/search?query=" + urllib.parse.quote(find_detail)
 
-        print(product.__repr__())
+    soup = get_soup(start)
 
+    count = get_page_count(soup)
+    print(f'Всего страниц: {count}')
+
+    for n in range(2, count+2):
+        print(f'Page: {n-1}')
+        for element in soup.find_all('div',
+                                     class_="ms2_product cataloge__item_add"):
+            name = element.find('h3',
+                                class_="cataloge__title cataloge__title_add").text.strip()
+            price = element.find('span', class_="c__price").text.strip()
+            in_stock = element.find('p', class_="in_store__line").text.strip()
+            link = ""
+
+            if in_stock.find('В наличии') >= 0:
+                product = Product(name, price, in_stock, link)
+                print(product.__repr__())
+
+        if n <= count:
+            page = start + '&page=' + str(n)
+            soup = get_soup(page)
 
 main()
+
+
+
+
 #
 # <div class="mse2_pagination cataloge__pagination">
 #     <a href="search?query=%D0%B1%D0%B5%D0%BD%D0%B7%D0%BE%D0%BD%D0%B0%D1%81%D0%BE%D1%81" class="c__pag__link active">1</a><a href="search?page=2&amp;query=%D0%B1%D0%B5%D0%BD%D0%B7%D0%BE%D0%BD%D0%B0%D1%81%D0%BE%D1%81" class="c__pag__link">2</a><a href="search?page=3&amp;query=%D0%B1%D0%B5%D0%BD%D0%B7%D0%BE%D0%BD%D0%B0%D1%81%D0%BE%D1%81" class="c__pag__link">3</a>
 # </div>
+#count = "https://gazzap116.ru/" + element.find('a').get('href')
