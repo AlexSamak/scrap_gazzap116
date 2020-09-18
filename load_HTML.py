@@ -1,8 +1,9 @@
 # Read HTML from a file
 from bs4 import BeautifulSoup
 
-file_list = (
+FILE_LIST = (
     'soup1.html', 'soup2.html', 'soup3.html', 'soup4.html', 'soup5.html',)
+BASE_DIR_DATA = 'data/'
 
 
 class Product:
@@ -21,13 +22,16 @@ class Product:
         return str(self.__dict__)
 
 
-def get_soup(file_name):
-    with open(file_name, "rb") as f:
+def get_soup(file_name: str):
+    """ Open file with Soup data """
+    with open(BASE_DIR_DATA + file_name, "rb") as f:
         soup = BeautifulSoup(f.read(), "lxml")
     return soup
 
 
 def add_objs(file_name: str, product_list: list, is_available: bool = True):
+    """ Add objects.Product from file with Soup data
+        you can enable availability control"""
     cnt = 0
     soup = get_soup(file_name)
 
@@ -51,7 +55,7 @@ def main():
     product_list = []
     pos_cnt = 0
 
-    for file in file_list:
+    for file in FILE_LIST:
         pos_cnt += add_objs(file, product_list, False)
 
     for product in product_list:

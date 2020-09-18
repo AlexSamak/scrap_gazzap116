@@ -4,7 +4,8 @@ from bs4 import BeautifulSoup
 import pickle
 import sys
 
-base_link = "https://gazzap116.ru/search?query="
+BASE_LINK = "https://gazzap116.ru/search?query="
+BASE_DIR_DATA = 'data/'
 sys.setrecursionlimit(20000)
 
 def get_page_amount(search_link: str):
@@ -49,7 +50,7 @@ def page_save(link: str, page_num: int):
     html = get_html(link)
     soup = BeautifulSoup(html, "lxml")
     # Save the soup object to a file
-    with open(f"soup{page_num}.pickle", "wb") as f:
+    with open(f"{BASE_DIR_DATA}soup{page_num}.pickle", "wb") as f:
         pickle.dump(soup, f)
 
 
@@ -58,7 +59,7 @@ def get_search_link():
     find_detail = input('Название детали: ').strip()
     if find_detail == '':
         return 'https://127.0.0.1'
-    return base_link + urllib.parse.quote(find_detail)
+    return BASE_LINK + urllib.parse.quote(find_detail)
 
 
 def main():

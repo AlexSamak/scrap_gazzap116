@@ -2,9 +2,10 @@
 from bs4 import BeautifulSoup
 import pickle
 
-file_list = (
+FILE_LIST = (
     'soup1.pickle', 'soup2.pickle', 'soup3.pickle', 'soup4.pickle',
     'soup5.pickle',)
+BASE_DIR_DATA = 'data/'
 
 
 class Product:
@@ -23,14 +24,16 @@ class Product:
         return str(self.__dict__)
 
 
-def get_soup(file_name):
+def get_soup(file_name: str):
     """ Read the soup object from a file """
-    with open(file_name, "rb") as f:
+    with open(BASE_DIR_DATA + file_name, "rb") as f:
         soup_obj = pickle.load(f)
     return soup_obj
 
 
 def add_objs(file_name: str, product_list: list, is_available: bool = True):
+    """ Add objects.Product from file with Soup data
+            you can enable availability control"""
     cnt = 0
     soup = get_soup(file_name)
 
@@ -54,7 +57,7 @@ def main():
     product_list = []
     pos_cnt = 0
 
-    for file in file_list:
+    for file in FILE_LIST:
         pos_cnt += add_objs(file, product_list, True)
 
     for product in product_list:

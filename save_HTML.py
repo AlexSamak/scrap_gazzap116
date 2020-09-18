@@ -2,7 +2,8 @@ import urllib.parse
 from urllib.request import urlopen, Request
 from bs4 import BeautifulSoup
 
-base_link = "https://gazzap116.ru/search?query="
+BASE_LINK = "https://gazzap116.ru/search?query="
+BASE_DIR_DATA = 'data/'
 
 
 def get_page_amount(search_link: str):
@@ -33,7 +34,7 @@ def get_html(find_link: str):
     return html
 
 
-def get_page_link(find_link, page_num):
+def get_page_link(find_link: str, page_num: int):
     """ return html page link by page number"""
     if page_num == 1:
         link = find_link
@@ -42,11 +43,11 @@ def get_page_link(find_link, page_num):
     return link
 
 
-def page_save(link, page_num):
+def page_save(link: str, page_num: int):
     """ Save HTML page to file by page number """
     html = get_html(link)
     # Save HTML to a file
-    with open(f"soup{page_num}.html", "wb") as f:
+    with open(f"{BASE_DIR_DATA}soup{page_num}.html", "wb") as f:
         while True:
             chunk = html.read(1024)
             if not chunk:
@@ -59,7 +60,7 @@ def get_search_link():
     find_detail = input('Название детали: ').strip()
     if find_detail == '':
         return 'https://127.0.0.1'
-    return base_link + urllib.parse.quote(find_detail)
+    return BASE_LINK + urllib.parse.quote(find_detail)
 
 
 def main():
