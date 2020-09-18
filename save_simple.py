@@ -2,7 +2,7 @@ import urllib.parse
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
-base_link = "https://gazzap116.ru/search?query="
+base_link = "https://baza.drom.ru/kazan/sell_spare_parts/+/%E2%FB%F5%EB%EE%EF%ED%E0%FF+%F1%E8%F1%F2%E5%EC%E0/model/%E3%E0%E7+%E3%E0%E7%E5%EB%FC/"
 
 
 def get_page_amount(search_link):
@@ -49,14 +49,7 @@ def get_search_link():
 
 
 def main():
-    search_link = get_search_link()
-    page_count = get_page_amount(search_link)
-    print(f'Количество страниц: {page_count}')
-
-    for page_item in range(1, page_count + 1):
-        def_link = get_page_link(search_link, page_item)
-        print(def_link)
-        page_save(def_link, page_item)
+    page_save(base_link, 25)
 
 
 main()
