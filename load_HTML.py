@@ -49,12 +49,15 @@ def add_objs(file_name: str, product_list: list, is_available: bool = True):
 
 def main():
     product_list = []
+    pos_cnt = 0
 
     for file in file_list:
-        print(add_objs(file, product_list, False))
+        pos_cnt += add_objs(file, product_list, False)
 
     for product in product_list:
         print(product.__repr__())
+
+    print(f'\nВыведено {pos_cnt} позиций.')
 
 
 main()
