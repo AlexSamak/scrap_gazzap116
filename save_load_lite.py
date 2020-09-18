@@ -1,3 +1,4 @@
+""" Кроме того, это код, который я бы использовал для менее вложенного сайта: """
 import pickle
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
@@ -5,7 +6,7 @@ import sys
 
 url = "https://stackoverflow.com/questions/52973700/how-to-save-the-beautifulsoup-object-to-a-file-and-then-read-from-it-as-beautifu"
 html = urlopen(url)
-soup = BeautifulSoup(html,"lxml")
+soup = BeautifulSoup(html, "lxml")
 
 sys.setrecursionlimit(8000)
 

@@ -1,8 +1,8 @@
 import urllib.parse
 
 """" encode to URL string"""
-find_detail = 'глушитель'
-start = "https://gazzap116.ru/search?query=" + urllib.parse.quote(find_detail)
+detail = 'глушитель'
+start = "https://gazzap116.ru/search?query=" + urllib.parse.quote(detail)
 print(start)
 print("https://gazzap116.ru/search?query=%D0%B3%D0%BB%D1%83%D1%88%D0%B8%D1%82%D0%B5%D0%BB%D1%8C")
 
