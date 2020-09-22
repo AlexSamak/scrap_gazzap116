@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import csv
+import re
 
 FILE_BASE_NAME = 'soup'
 FILE_COUNT = 5
@@ -28,13 +30,41 @@ class Product:
         return str(self.__dict__)
 
 
-def db_tables_create(db_name: str, columns: []):
+def csv_to_db(file_name: str, db_name:str):
+    conn = None
+    try:
+        # read the connection parameters
+        params = ({
+            'dbname': db_name,
+            'user': 'postgres',
+            'password': 'postgres',
+            'host': 'localhost'})
+        # connect to the PostgreSQL server
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        cur.copy_expert(
+            """COPY buff_table(autopart_name, autopart_price, autopart_balance) from stdin with delimiter as ',' csv QUOTE '\"' ESCAPE '\"' NULL 'null' """,
+            open(file_name))
+        # Clearing the file
+        open(file_name, 'w').close()
+        cur.close()
+        # commit the changes
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+
+def db_tables_create(db_name: str, tabl_name: str, columns: []):
     print(db_name)
     print(list(columns))
     """ create tables in the PostgreSQL database"""
     commands = (
-        """
-        CREATE TABLE IF NOT EXISTS autoparts (
+        f"""
+        CREATE TABLE IF NOT EXISTS {tabl_name} (
             autopart_id SERIAL PRIMARY KEY,
             autopart_name VARCHAR(255) NOT NULL,
             autopart_price DECIMAL(13,2) NOT NULL,
@@ -128,6 +158,7 @@ def add_objs(file_name: str, product_list: list, is_available: bool = True):
 
 def main():
     product_list = []
+    csv_list = []
     pos_cnt = 0
 
     files = file_list_get()
@@ -135,9 +166,23 @@ def main():
         pos_cnt += add_objs(file, product_list, AVAILABLE)
 
     for product in product_list:
-        print(product.__repr__())
+        in_stock = re.search(r'\d+', product.in_stock).group()
+        csv_list.append([product.name, float(product.price), in_stock])
+
 
     print(f'\nВыведено {pos_cnt} позиций.')
+
+    file_name = 'data.csv'
+    my_file = open(file_name, 'w', newline='')
+    for item in csv_list:
+        writer = csv.writer(my_file, quoting=csv.QUOTE_ALL)
+        writer.writerow([item[0], item[1], item[2]])
+    my_file.close()
+
+
+    csv_to_db('data.csv', 'tst_base-1')
+
+
 
 
 if __name__ == '__main__':
@@ -145,6 +190,7 @@ if __name__ == '__main__':
         database_create('tst_base-1')
         db_tables_create('tst_base-1', ['id', 'name', 'price', 'balance'])
     main()
+
 
 
 
