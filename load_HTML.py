@@ -11,7 +11,7 @@ FILE_COUNT = 5
 BASE_DIR_DATA = 'data/'
 AVAILABLE = True
 
-NEW_DB = False
+NEW_DB = True
 
 
 class Product:
@@ -30,7 +30,7 @@ class Product:
         return str(self.__dict__)
 
 
-def csv_to_db(file_name: str, db_name:str):
+def csv_to_db(file_name: str, db_name: str):
     conn = None
     try:
         # read the connection parameters
@@ -42,9 +42,19 @@ def csv_to_db(file_name: str, db_name:str):
         # connect to the PostgreSQL server
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
+        command = """CREATE TEMP TABLE tmp_x AS SELECT * FROM work LIMIT 0;"""
+        cur.execute(command)
         cur.copy_expert(
-            """COPY buff_table(autopart_name, autopart_price, autopart_balance) from stdin with delimiter as ',' csv QUOTE '\"' ESCAPE '\"' NULL 'null' """,
+            """COPY tmp_x(autopart_name, autopart_price, autopart_balance) from stdin with delimiter as ',' csv QUOTE '\"' ESCAPE '\"' NULL 'null' """,
             open(file_name))
+        # command = """
+        #         INSERT INTO work
+        #         SELECT tmp_x.*
+        #             FROM   tmp_x
+        #             LEFT   JOIN work USING (autopart_id)
+        #             WHERE  work.autopart_id IS NULL;
+        #         DROP TABLE tmp_x;"""
+        # cur.execute(command)
         # Clearing the file
         open(file_name, 'w').close()
         cur.close()
@@ -57,16 +67,13 @@ def csv_to_db(file_name: str, db_name:str):
             conn.close()
 
 
-
-def db_tables_create(db_name: str, tabl_name: str, columns: []):
-    print(db_name)
-    print(list(columns))
-    """ create tables in the PostgreSQL database"""
+def db_table_create(db_name: str, tabl_name: str):
+    """ create table in the PostgreSQL database"""
     commands = (
         f"""
         CREATE TABLE IF NOT EXISTS {tabl_name} (
             autopart_id SERIAL PRIMARY KEY,
-            autopart_name VARCHAR(255) NOT NULL,
+            autopart_name VARCHAR(255) NOT NULL UNIQUE,
             autopart_price DECIMAL(13,2) NOT NULL,
             autopart_balance INTEGER NOT NULL            
         )
@@ -99,24 +106,21 @@ def db_tables_create(db_name: str, tabl_name: str, columns: []):
             conn.close()
 
 
-
 def database_create(name: str):
-    con = psycopg2.connect(dbname='postgres',
+    """ connect to default (postgres) base & create new"""
+    conn = psycopg2.connect(dbname='postgres',
                            user='postgres',
                            host='localhost',
                            password='postgres')
 
-    con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # <-- ADD THIS LINE
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
-    cur = con.cursor()
+    cur = conn.cursor()
 
-    # Use the psycopg2.sql module instead of string concatenation
-    # in order to avoid sql injection attacs.
     cur.execute(sql.SQL("CREATE DATABASE {}").format(
         sql.Identifier(name))
     )
-
-
+    print(f'Database: {name} is created!')
 
 
 def file_list_get():
@@ -169,7 +173,6 @@ def main():
         in_stock = re.search(r'\d+', product.in_stock).group()
         csv_list.append([product.name, float(product.price), in_stock])
 
-
     print(f'\nВыведено {pos_cnt} позиций.')
 
     file_name = 'data.csv'
@@ -179,16 +182,13 @@ def main():
         writer.writerow([item[0], item[1], item[2]])
     my_file.close()
 
-
     csv_to_db('data.csv', 'tst_base-1')
 
 
-
-
 if __name__ == '__main__':
-    if NEW_DB:
-        database_create('tst_base-1')
-        db_tables_create('tst_base-1', ['id', 'name', 'price', 'balance'])
+    #database_create('tst_base-1')
+    #db_table_create('tst_base-1', 'work')
+
     main()
 
 
